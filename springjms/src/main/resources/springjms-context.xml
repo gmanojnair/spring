@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:amq="http://activemq.apache.org/schema/core"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util.xsd
+						   http://www.springframework.org/schema/mvc
+    					   http://www.springframework.org/schema/mvc/spring-mvc.xsd
+    					   http://www.springframework.org/schema/jms
+						   http://www.springframework.org/schema/jms/spring-jms.xsd
+						   http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- <util:properties id="application" location="classpath:application.properties" /> -->
+    
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:application.properties</value>
+			</list>
+		</property>
+	</bean>
+    
+    <!-- Activemq connection factory -->
+    <bean id="amqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <constructor-arg index="0" value="${jms.broker.url}"/>
+    </bean>
+
+    <!-- ConnectionFactory Definition -->
+    <bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+        <constructor-arg ref="amqConnectionFactory" />
+    </bean>
+
+    <!--  Default Destination Queue Definition-->
+    <bean id="defaultDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg index="0" value="${jms.queue.name}"/>
+    </bean>
+
+    <!-- JmsTemplate Definition -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="defaultDestination" ref="defaultDestination" />
+        <property name="deliveryMode" value="2" />
+		<property name="deliveryPersistent" value="true" />
+    </bean>
+
+    <!-- Message Sender Definition -->
+    <bean id="messageSender" class="com.manoj.spring.jms.MessageSender">
+        <constructor-arg index="0" ref="jmsTemplate" />
+    </bean>
+    
+    <!-- Message Receiver Definition -->
+    <bean id="messageReceiver" class="com.manoj.spring.jms.MessageReceiver">
+    </bean>
+    
+    
+    <bean class="org.springframework.jms.listener.SimpleMessageListenerContainer">
+        <property name="connectionFactory" ref="connectionFactory" />
+        <property name="destinationName" value="${jms.queue.name}" />
+        <property name="messageListener" ref="messageReceiver" />
+  
+    </bean>
+    
+	
+	<!-- <jms:listener-container container-type="default" connection-factory="connectionFactory" acknowledge="transacted" concurrency="10-50">
+		<jms:listener destination="${jms.queue.name}" ref="messageReceiver" />
+		<jms:listener destination="${jms.queue.name}" ref="messageSender" />
+	
+	</jms:listener-container>
+     -->
+	
+
+
+</beans>
