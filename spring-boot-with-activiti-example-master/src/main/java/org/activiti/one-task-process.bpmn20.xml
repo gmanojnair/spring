@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+        xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+        xmlns:activiti="http://activiti.org/bpmn"
+        targetNamespace="Examples">
+
+    <process id="oneTaskProcess" name="The One Task Process">
+        <startEvent id="theStart" />
+       
+        <sequenceFlow id="flow1" sourceRef="theStart" targetRef="theTask" />
+        <!-- <userTask id="theTask" name="my task" activiti:assignee="${person.id}"/> -->
+        
+        <userTask id="theTask" name="my task" />
+        <sequenceFlow id="flow2" sourceRef="theTask" targetRef="validationTask" />
+       
+        <serviceTask id="validationTask" name="my validation service" activiti:class="org.activiti.MyActivityService"/>
+        <sequenceFlow id="flow3" sourceRef="validationTask" targetRef="secondvalidationTask" />
+        
+        <serviceTask id="secondvalidationTask" name="my another validation service" activiti:class="org.activiti.MyActivityService"/>
+        <sequenceFlow id="flow4" sourceRef="secondvalidationTask" targetRef="theEnd" />
+        
+        <endEvent id="theEnd" />
+    </process>
+
+</definitions>
