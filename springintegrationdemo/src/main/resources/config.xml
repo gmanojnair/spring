@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:si="http://www.springframework.org/schema/integration"
+	xmlns:jms="http://www.springframework.org/schema/integration/jms"
+	xmlns:file="http://www.springframework.org/schema/integration/file"
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/integration
+           http://www.springframework.org/schema/integration/spring-integration-4.2.xsd
+           http://www.springframework.org/schema/integration/file
+            http://www.springframework.org/schema/integration/file/spring-integration-file-1.0.xsd
+            http://www.springframework.org/schema/integration/jms 
+            http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd">
+
+	<!-- This acts as a bridge, messages coming from the JMS queue will get 
+		sent the the Spring Integration channel, and messages sent to the Spring 
+		Integration channel will get passed along to the JMS queue. The destination 
+		property is set to the name of the ActiveMQ queue bean <jms:message-driven-channel-adapter 
+		id="helloJMSAdapater" destination="helloJMSQueue" channel="helloChannel"/> -->
+
+	<si:channel id="helloChannel"/>
+	
+
+
+	<jms:message-driven-channel-adapter
+		id="helloJMSAdapater" destination="helloJMSQueue" channel="helloChannel" />
+
+	<si:channel id="output" />
+
+
+	<si:channel id="input" />
+
+	<file:outbound-channel-adapter channel="output"
+		directory="C:/tmp" />
+
+	<si:service-activator input-channel="input"
+		output-channel="output" ref="shouter" method="shout" />
+
+	
+	<si:service-activator input-channel="helloChannel"
+		output-channel="output" ref="shouter" method="shout" />
+	
+	
+
+	<bean id="shouter" class="com.manoj.spring.si.Shouter" />
+
+
+	<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"
+		p:brokerURL="tcp://localhost:61616" />
+
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<constructor-arg name="connectionFactory" ref="connectionFactory"></constructor-arg>
+		<property name="defaultDestinationName" value="hello.queue"></property>
+	</bean>
+
+
+</beans>
